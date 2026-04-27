@@ -1,0 +1,16 @@
+{
+  "short_name": "FastTrack",
+  "name": "FastTrack Pro: Elite Fasting",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3240/3240652.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "index.html",
+  "background_color": "#080c14",
+  "display": "standalone",
+  "scope": "./",
+  "theme_color": "#10b981"
+}

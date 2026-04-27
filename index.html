@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FastTrack Pro - Elite Fasting</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#10b981">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3240/3240652.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap');
+        body { font-family: 'Outfit', sans-serif; background: #080c14; color: white; overflow-x: hidden; }
+        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); }
+        .progress-ring { transition: stroke-dashoffset 0.5s ease-in-out; transform: rotate(-90deg); transform-origin: 50% 50%; }
+    </style>
+</head>
+<body class="flex flex-col items-center min-h-screen p-4 pb-12">
+
+    <div class="w-full max-w-md flex justify-between items-center mb-8 mt-4">
+        <div>
+            <h1 class="text-2xl font-bold text-emerald-400">FastTrack <span class="text-white font-light">Pro</span></h1>
+            <p id="date-display" class="text-slate-500 text-[10px] uppercase tracking-widest"></p>
+        </div>
+        <div class="text-right">
+            <span class="text-slate-400 text-[10px]">ESTADO</span>
+            <p id="status-badge-top" class="text-sm font-bold text-emerald-400 uppercase">Listo</p>
+        </div>
+    </div>
+
+    <div class="glass p-8 rounded-[2.5rem] shadow-2xl w-full max-w-md text-center relative overflow-hidden">
+        <div class="absolute -top-24 -right-24 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl"></div>
+        
+        <div class="mb-6">
+            <label class="text-slate-400 text-xs block mb-2 uppercase tracking-widest">Protocolo</label>
+            <select id="plan" class="bg-slate-800 text-white p-3 rounded-xl w-full outline-none border border-slate-700 focus:border-emerald-500">
+                <option value="16">16:8 - Estándar</option>
+                <option value="18">18:6 - Avanzado</option>
+                <option value="20">20:4 - Guerrero</option>
+                <option value="24">24:0 - OMAD</option>
+            </select>
+        </div>
+
+        <div class="relative flex items-center justify-center mb-8">
+            <svg class="w-72 h-72">
+                <circle class="text-slate-800" stroke-width="10" stroke="currentColor" fill="transparent" r="130" cx="144" cy="144"/>
+                <circle id="progress-bar" class="text-emerald-500 progress-ring" stroke-width="10" stroke-dasharray="816.8" stroke-dashoffset="816.8" stroke-linecap="round" stroke="currentColor" fill="transparent" r="130" cx="144" cy="144"/>
+            </svg>
+            <div class="absolute flex flex-col items-center">
+                <span id="timer" class="text-5xl font-light mb-1">00:00:00</span>
+                <div id="status-badge" class="bg-slate-700/50 px-3 py-1 rounded-full text-[10px] text-slate-300 uppercase tracking-tighter">Inactivo</div>
+            </div>
+        </div>
+
+        <div id="phase-container" class="hidden mb-8 p-4 rounded-2xl bg-slate-900/50 border border-slate-800">
+            <p class="text-[10px] text-slate-500 uppercase mb-1">Fase Actual</p>
+            <p id="metabolic-phase" class="text-emerald-400 font-semibold italic text-sm">--</p>
+        </div>
+
+        <button id="btn-action" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-4 rounded-2xl transition-all shadow-lg active:scale-95">
+            INICIAR AYUNO
+        </button>
+    </div>
+
+    <div class="w-full max-w-md mt-6 grid grid-cols-2 gap-4">
+        <div class="glass p-4 rounded-2xl">
+            <p class="text-slate-500 text-[10px] uppercase">Fin estimado</p>
+            <p id="end-time" class="text-lg font-semibold">--:--</p>
+        </div>
+        <div class="glass p-4 rounded-2xl text-center">
+             <p class="text-slate-500 text-[10px] uppercase">Racha</p>
+             <p class="text-lg font-semibold text-orange-400">⚡ 1 día</p>
+        </div>
+    </div>
+
+    <script>
+        const progressBar = document.getElementById('progress-bar');
+        const timerEl = document.getElementById('timer');
+        const statusBadge = document.getElementById('status-badge');
+        const statusBadgeTop = document.getElementById('status-badge-top');
+        const btnAction = document.getElementById('btn-action');
+        const phaseText = document.getElementById('metabolic-phase');
+        const circumference = 130 * 2 * Math.PI;
+        let timerInterval;
+        let isFasting = false;
+
+        function updateMetabolicPhase(hours) {
+            let phase = "";
+            if (hours < 4) phase = "🥑 Digestión y Absorción";
+            else if (hours < 12) phase = "📉 Descenso de Insulina";
+            else if (hours < 16) phase = "🔥 Quema de Grasa Activa";
+            else if (hours < 24) phase = "🧬 Autofagia Iniciada";
+            else phase = "🚀 Cetosis Profunda";
+            phaseText.innerText = phase;
+            document.getElementById('phase-container').classList.remove('hidden');
+        }
+
+        function updateUI() {
+            const startTime = new Date(parseInt(localStorage.getItem('fastingStartTime')));
+            const now = new Date();
+            const elapsedSeconds = Math.floor((now - startTime) / 1000);
+            const targetHours = parseInt(document.getElementById('plan').value);
+            const targetSeconds = targetHours * 3600;
+
+            const h = Math.floor(elapsedSeconds / 3600).toString().padStart(2, '0');
+            const m = Math.floor((elapsedSeconds % 3600) / 60).toString().padStart(2, '0');
+            const s = (elapsedSeconds % 60).toString().padStart(2, '0');
+            timerEl.innerText = `${h}:${m}:${s}`;
+
+            const progress = Math.min(elapsedSeconds / targetSeconds, 1);
+            progressBar.style.strokeDashoffset = circumference - (progress * circumference);
+            updateMetabolicPhase(elapsedSeconds / 3600);
+
+            const endDate = new Date(startTime.getTime() + targetSeconds * 1000);
+            document.getElementById('end-time').innerText = endDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+            if (elapsedSeconds >= targetSeconds) {
+                statusBadge.innerText = "Meta Lograda";
+                statusBadgeTop.innerText = "Completado";
+                statusBadgeTop.classList.replace('text-emerald-400', 'text-yellow-400');
+            } else {
+                statusBadge.innerText = "Ayunando";
+                statusBadgeTop.innerText = "En curso";
+            }
+        }
+
+        btnAction.addEventListener('click', () => {
+            if (!isFasting) {
+                const startTime = Date.now();
+                localStorage.setItem('fastingStartTime', startTime);
+                isFasting = true;
+                btnAction.innerText = "TERMINAR AYUNO";
+                btnAction.classList.replace('bg-emerald-600', 'bg-red-900/40');
+                timerInterval = setInterval(updateUI, 1000);
+                updateUI();
+            } else {
+                if(confirm("¿Seguro que quieres terminar el ayuno?")) {
+                    clearInterval(timerInterval);
+                    isFasting = false;
+                    localStorage.removeItem('fastingStartTime');
+                    location.reload();
+                }
+            }
+        });
+
+        window.onload = () => {
+            document.getElementById('date-display').innerText = new Intl.DateTimeFormat('es-ES', { dateStyle: 'full' }).format(new Date());
+            if (localStorage.getItem('fastingStartTime')) {
+                isFasting = true;
+                btnAction.innerText = "TERMINAR AYUNO";
+                btnAction.classList.replace('bg-emerald-600', 'bg-red-900/40');
+                timerInterval = setInterval(updateUI, 1000);
+                updateUI();
+            }
+            if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
+        };
+    </script>
+</body>
+</html>
