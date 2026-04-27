@@ -3,9 +3,10 @@
   "name": "FastTrack Pro: Elite Fasting",
   "icons": [
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/3240/3240652.png",
+      "src": "app_logo.png",
       "type": "image/png",
-      "sizes": "512x512"
+      "sizes": "1024x1024",
+      "purpose": "any maskable"
     }
   ],
   "start_url": "index.html",

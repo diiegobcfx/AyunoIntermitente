@@ -1,5 +1,5 @@
 const CACHE_NAME = 'fasttrack-v1';
-const assets = ['./', 'index.html', 'manifest.json'];
+const assets = ['./', 'index.html', 'manifest.json', 'app_logo.png'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(assets)));
