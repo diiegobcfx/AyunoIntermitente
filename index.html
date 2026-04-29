@@ -15,17 +15,15 @@
         body { font-family: 'Outfit', sans-serif; background: #080c14; color: white; overflow-x: hidden; -webkit-tap-highlight-color: transparent; }
         .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); }
         .progress-ring { transition: stroke-dashoffset 0.5s ease-in-out; transform: rotate(-90deg); transform-origin: 50% 50%; }
-        /* Animación suave para la carga */
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        .fade-in { animation: fadeIn 0.5s ease-in-out; }
+        .modal { transition: opacity 0.3s ease-in-out; }
     </style>
 </head>
-<body class="flex flex-col items-center min-h-screen p-4 pb-12 fade-in">
+<body class="flex flex-col items-center min-h-screen p-4 pb-12">
 
-    <!-- Header con LOGO -->
+    <!-- Header -->
     <div class="w-full max-w-md flex justify-between items-center mb-8 mt-4">
         <div class="flex items-center gap-3">
-            <img src="app_logo.png" alt="FastTrack Pro Logo" class="w-10 h-10 rounded-full shadow-lg">
+            <img src="app_logo.png" alt="Logo" class="w-10 h-10 rounded-full shadow-lg">
             <div>
                 <h1 class="text-2xl font-bold text-emerald-400">FastTrack <span class="text-white font-light">Pro</span></h1>
                 <p id="date-display" class="text-slate-500 text-[10px] uppercase tracking-widest"></p>
@@ -37,12 +35,13 @@
         </div>
     </div>
 
+    <!-- App Principal -->
     <div class="glass p-8 rounded-[2.5rem] shadow-2xl w-full max-w-md text-center relative overflow-hidden">
         <div class="absolute -top-24 -right-24 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl"></div>
         
-        <div class="mb-6">
-            <label class="text-slate-400 text-xs block mb-2 uppercase tracking-widest">Protocolo</label>
-            <select id="plan" class="bg-slate-800 text-white p-3 rounded-xl w-full outline-none border border-slate-700 focus:border-emerald-500 transition-colors">
+        <div class="mb-6 text-left">
+            <label class="text-slate-400 text-[10px] block mb-2 uppercase tracking-widest ml-1">Protocolo</label>
+            <select id="plan" class="bg-slate-800 text-white p-3 rounded-xl w-full outline-none border border-slate-700 focus:border-emerald-500">
                 <option value="16">16:8 - Estándar</option>
                 <option value="18">18:6 - Avanzado</option>
                 <option value="20">20:4 - Guerrero</option>
@@ -51,34 +50,49 @@
         </div>
 
         <div class="relative flex items-center justify-center mb-8">
-            <svg class="w-72 h-72 drop-shadow-xl">
+            <svg class="w-72 h-72">
                 <circle class="text-slate-800" stroke-width="10" stroke="currentColor" fill="transparent" r="130" cx="144" cy="144"/>
                 <circle id="progress-bar" class="text-emerald-500 progress-ring" stroke-width="10" stroke-dasharray="816.8" stroke-dashoffset="816.8" stroke-linecap="round" stroke="currentColor" fill="transparent" r="130" cx="144" cy="144"/>
             </svg>
             <div class="absolute flex flex-col items-center">
-                <span id="timer" class="text-5xl font-light mb-1 tracking-tight">00:00:00</span>
-                <div id="status-badge" class="bg-slate-700/50 px-3 py-1 rounded-full text-[10px] text-slate-300 uppercase tracking-tighter shadow-inner">Inactivo</div>
+                <span id="timer" class="text-5xl font-light mb-1">00:00:00</span>
+                <div id="status-badge" class="bg-slate-700/50 px-3 py-1 rounded-full text-[10px] text-slate-300 uppercase tracking-tighter">Inactivo</div>
             </div>
         </div>
 
-        <div id="phase-container" class="hidden mb-8 p-4 rounded-2xl bg-slate-900/50 border border-slate-800 fade-in">
-            <p class="text-[10px] text-slate-500 uppercase mb-1">Fase Actual</p>
+        <div id="phase-container" class="hidden mb-8 p-4 rounded-2xl bg-slate-900/50 border border-slate-800">
             <p id="metabolic-phase" class="text-emerald-400 font-semibold italic text-sm">--</p>
         </div>
 
-        <button id="btn-action" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-4 rounded-2xl transition-all shadow-lg active:scale-95 shadow-emerald-900/30">
+        <button id="btn-action" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-4 rounded-2xl transition-all shadow-lg active:scale-95">
             INICIAR AYUNO
         </button>
     </div>
 
+    <!-- Stats Cards -->
     <div class="w-full max-w-md mt-6 grid grid-cols-2 gap-4">
-        <div class="glass p-4 rounded-2xl shadow-md">
+        <div class="glass p-4 rounded-2xl">
             <p class="text-slate-500 text-[10px] uppercase">Fin estimado</p>
             <p id="end-time" class="text-lg font-semibold">--:--</p>
         </div>
-        <div class="glass p-4 rounded-2xl text-center shadow-md">
+        <div class="glass p-4 rounded-2xl text-center">
              <p class="text-slate-500 text-[10px] uppercase">Racha</p>
              <p class="text-lg font-semibold text-orange-400">⚡ 1 día</p>
+        </div>
+    </div>
+
+    <!-- MODAL DE CONFIRMACIÓN DE HORA -->
+    <div id="time-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-6">
+        <div class="glass w-full max-w-xs p-6 rounded-[2rem] text-center">
+            <h3 class="text-xl font-bold mb-4">¿A qué hora empezaste?</h3>
+            <p class="text-slate-400 text-sm mb-6">Confirma o ajusta el momento exacto en que dejaste de comer.</p>
+            
+            <input type="time" id="start-time-input" class="bg-slate-800 text-white text-3xl p-4 rounded-2xl w-full text-center border border-emerald-500/30 mb-8 outline-none">
+            
+            <div class="flex gap-3">
+                <button id="modal-cancel" class="flex-1 bg-slate-700 py-3 rounded-xl font-semibold">Cancelar</button>
+                <button id="modal-confirm" class="flex-1 bg-emerald-600 py-3 rounded-xl font-semibold">Confirmar</button>
+            </div>
         </div>
     </div>
 
@@ -89,6 +103,9 @@
         const statusBadgeTop = document.getElementById('status-badge-top');
         const btnAction = document.getElementById('btn-action');
         const phaseText = document.getElementById('metabolic-phase');
+        const timeModal = document.getElementById('time-modal');
+        const startTimeInput = document.getElementById('start-time-input');
+        
         const circumference = 130 * 2 * Math.PI;
         let timerInterval;
         let isFasting = false;
@@ -111,48 +128,74 @@
             const startTime = new Date(parseInt(savedStart));
             const now = new Date();
             const elapsedSeconds = Math.floor((now - startTime) / 1000);
-            const targetHours = parseInt(document.getElementById('plan').value);
-            const targetSeconds = targetHours * 3600;
+            
+            // Si la hora elegida es en el futuro, mostrar 0
+            const displaySeconds = elapsedSeconds < 0 ? 0 : elapsedSeconds;
 
-            const h = Math.floor(elapsedSeconds / 3600).toString().padStart(2, '0');
-            const m = Math.floor((elapsedSeconds % 3600) / 60).toString().padStart(2, '0');
-            const s = (elapsedSeconds % 60).toString().padStart(2, '0');
+            const h = Math.floor(displaySeconds / 3600).toString().padStart(2, '0');
+            const m = Math.floor((displaySeconds % 3600) / 60).toString().padStart(2, '0');
+            const s = (displaySeconds % 60).toString().padStart(2, '0');
             timerEl.innerText = `${h}:${m}:${s}`;
 
-            const progress = Math.min(elapsedSeconds / targetSeconds, 1);
+            const targetHours = parseInt(document.getElementById('plan').value);
+            const targetSeconds = targetHours * 3600;
+            const progress = Math.min(displaySeconds / targetSeconds, 1);
             progressBar.style.strokeDashoffset = circumference - (progress * circumference);
-            updateMetabolicPhase(elapsedSeconds / 3600);
+            
+            updateMetabolicPhase(displaySeconds / 3600);
 
             const endDate = new Date(startTime.getTime() + targetSeconds * 1000);
             document.getElementById('end-time').innerText = endDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
 
-            if (elapsedSeconds >= targetSeconds) {
+            if (displaySeconds >= targetSeconds) {
                 statusBadge.innerText = "Meta Lograda";
                 statusBadgeTop.innerText = "Completado";
-                statusBadgeTop.classList.replace('text-emerald-400', 'text-yellow-400');
             } else {
                 statusBadge.innerText = "Ayunando";
                 statusBadgeTop.innerText = "En curso";
             }
         }
 
+        // Abrir Modal
         btnAction.addEventListener('click', () => {
             if (!isFasting) {
-                const startTime = Date.now();
-                localStorage.setItem('fastingStartTime', startTime);
-                isFasting = true;
-                btnAction.innerText = "TERMINAR AYUNO";
-                btnAction.classList.replace('bg-emerald-600', 'bg-red-900/40');
-                timerInterval = setInterval(updateUI, 1000);
-                updateUI();
+                // Poner hora actual en el input
+                const now = new Date();
+                const currentTime = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
+                startTimeInput.value = currentTime;
+                timeModal.classList.remove('hidden');
             } else {
-                if(confirm("¿Seguro que quieres terminar el ayuno? Tu progreso se guardará.")) {
+                if(confirm("¿Terminar ayuno?")) {
                     clearInterval(timerInterval);
-                    isFasting = false;
                     localStorage.removeItem('fastingStartTime');
                     location.reload();
                 }
             }
+        });
+
+        // Confirmar en el Modal
+        document.getElementById('modal-confirm').addEventListener('click', () => {
+            const [hours, minutes] = startTimeInput.value.split(':');
+            const startDate = new Date();
+            startDate.setHours(parseInt(hours), parseInt(minutes), 0);
+            
+            // Si la hora elegida es "mayor" que ahora (ej: elegiste las 23:00 y son las 01:00), 
+            // asumimos que fue ayer
+            if (startDate > new Date()) {
+                startDate.setDate(startDate.getDate() - 1);
+            }
+
+            localStorage.setItem('fastingStartTime', startDate.getTime());
+            isFasting = true;
+            timeModal.classList.add('hidden');
+            btnAction.innerText = "TERMINAR AYUNO";
+            btnAction.classList.replace('bg-emerald-600', 'bg-red-900/40');
+            timerInterval = setInterval(updateUI, 1000);
+            updateUI();
+        });
+
+        document.getElementById('modal-cancel').addEventListener('click', () => {
+            timeModal.classList.add('hidden');
         });
 
         window.onload = () => {
