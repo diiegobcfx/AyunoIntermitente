@@ -6,24 +6,26 @@
     <title>FastTrack Pro - Elite Fasting</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#10b981">
+    
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="app_logo.png">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap');
         body { font-family: 'Outfit', sans-serif; background: #080c14; color: white; overflow-x: hidden; -webkit-tap-highlight-color: transparent; }
         .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); }
         .progress-ring { transition: stroke-dashoffset 0.5s ease-in-out; transform: rotate(-90deg); transform-origin: 50% 50%; }
-        .modal { transition: opacity 0.3s ease-in-out; }
+        .modal-active { display: flex !important; animation: fadeIn 0.3s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body class="flex flex-col items-center min-h-screen p-4 pb-12">
 
-    <!-- Header -->
     <div class="w-full max-w-md flex justify-between items-center mb-8 mt-4">
         <div class="flex items-center gap-3">
-            <img src="app_logo.png" alt="Logo" class="w-10 h-10 rounded-full shadow-lg">
+            <img src="app_logo.png" alt="Logo" class="w-10 h-10 rounded-xl shadow-lg object-cover">
             <div>
                 <h1 class="text-2xl font-bold text-emerald-400">FastTrack <span class="text-white font-light">Pro</span></h1>
                 <p id="date-display" class="text-slate-500 text-[10px] uppercase tracking-widest"></p>
@@ -31,17 +33,16 @@
         </div>
         <div class="text-right">
             <span class="text-slate-400 text-[10px]">ESTADO</span>
-            <p id="status-badge-top" class="text-sm font-bold text-emerald-400 uppercase">Listo</p>
+            <p id="status-badge-top" class="text-sm font-bold text-emerald-400 uppercase tracking-tighter">Listo</p>
         </div>
     </div>
 
-    <!-- App Principal -->
     <div class="glass p-8 rounded-[2.5rem] shadow-2xl w-full max-w-md text-center relative overflow-hidden">
         <div class="absolute -top-24 -right-24 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl"></div>
         
         <div class="mb-6 text-left">
             <label class="text-slate-400 text-[10px] block mb-2 uppercase tracking-widest ml-1">Protocolo</label>
-            <select id="plan" class="bg-slate-800 text-white p-3 rounded-xl w-full outline-none border border-slate-700 focus:border-emerald-500">
+            <select id="plan" class="bg-slate-800 text-white p-3 rounded-xl w-full outline-none border border-slate-700 focus:border-emerald-500 appearance-none">
                 <option value="16">16:8 - Estándar</option>
                 <option value="18">18:6 - Avanzado</option>
                 <option value="20">20:4 - Guerrero</option>
@@ -56,12 +57,12 @@
             </svg>
             <div class="absolute flex flex-col items-center">
                 <span id="timer" class="text-5xl font-light mb-1">00:00:00</span>
-                <div id="status-badge" class="bg-slate-700/50 px-3 py-1 rounded-full text-[10px] text-slate-300 uppercase tracking-tighter">Inactivo</div>
+                <div id="status-badge" class="bg-slate-700/50 px-3 py-1 rounded-full text-[10px] text-slate-300 uppercase">Inactivo</div>
             </div>
         </div>
 
         <div id="phase-container" class="hidden mb-8 p-4 rounded-2xl bg-slate-900/50 border border-slate-800">
-            <p id="metabolic-phase" class="text-emerald-400 font-semibold italic text-sm">--</p>
+            <p id="metabolic-phase" class="text-emerald-400 font-semibold italic text-sm italic">--</p>
         </div>
 
         <button id="btn-action" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-4 rounded-2xl transition-all shadow-lg active:scale-95">
@@ -69,29 +70,16 @@
         </button>
     </div>
 
-    <!-- Stats Cards -->
-    <div class="w-full max-w-md mt-6 grid grid-cols-2 gap-4">
-        <div class="glass p-4 rounded-2xl">
-            <p class="text-slate-500 text-[10px] uppercase">Fin estimado</p>
-            <p id="end-time" class="text-lg font-semibold">--:--</p>
-        </div>
-        <div class="glass p-4 rounded-2xl text-center">
-             <p class="text-slate-500 text-[10px] uppercase">Racha</p>
-             <p class="text-lg font-semibold text-orange-400">⚡ 1 día</p>
-        </div>
-    </div>
-
-    <!-- MODAL DE CONFIRMACIÓN DE HORA -->
-    <div id="time-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-6">
-        <div class="glass w-full max-w-xs p-6 rounded-[2rem] text-center">
-            <h3 class="text-xl font-bold mb-4">¿A qué hora empezaste?</h3>
-            <p class="text-slate-400 text-sm mb-6">Confirma o ajusta el momento exacto en que dejaste de comer.</p>
+    <div id="time-modal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-50 hidden items-center justify-center p-6">
+        <div class="glass w-full max-w-xs p-8 rounded-[2.5rem] text-center border-emerald-500/20">
+            <h3 class="text-xl font-bold mb-2">¿Cuándo empezaste?</h3>
+            <p class="text-slate-400 text-xs mb-6">Ajusta la hora exacta si ya has empezado hace un rato.</p>
             
-            <input type="time" id="start-time-input" class="bg-slate-800 text-white text-3xl p-4 rounded-2xl w-full text-center border border-emerald-500/30 mb-8 outline-none">
+            <input type="time" id="start-time-input" class="bg-slate-800 text-white text-4xl p-4 rounded-2xl w-full text-center border border-emerald-500/50 mb-8 outline-none focus:ring-2 ring-emerald-500/20">
             
             <div class="flex gap-3">
-                <button id="modal-cancel" class="flex-1 bg-slate-700 py-3 rounded-xl font-semibold">Cancelar</button>
-                <button id="modal-confirm" class="flex-1 bg-emerald-600 py-3 rounded-xl font-semibold">Confirmar</button>
+                <button id="modal-cancel" class="flex-1 bg-slate-700 py-4 rounded-xl font-semibold text-sm">Cancelar</button>
+                <button id="modal-confirm" class="flex-1 bg-emerald-600 py-4 rounded-xl font-semibold text-sm">Confirmar</button>
             </div>
         </div>
     </div>
@@ -99,27 +87,12 @@
     <script>
         const progressBar = document.getElementById('progress-bar');
         const timerEl = document.getElementById('timer');
-        const statusBadge = document.getElementById('status-badge');
-        const statusBadgeTop = document.getElementById('status-badge-top');
         const btnAction = document.getElementById('btn-action');
-        const phaseText = document.getElementById('metabolic-phase');
         const timeModal = document.getElementById('time-modal');
         const startTimeInput = document.getElementById('start-time-input');
-        
         const circumference = 130 * 2 * Math.PI;
         let timerInterval;
         let isFasting = false;
-
-        function updateMetabolicPhase(hours) {
-            let phase = "";
-            if (hours < 4) phase = "🥑 Digestión y Absorción";
-            else if (hours < 12) phase = "📉 Descenso de Insulina";
-            else if (hours < 16) phase = "🔥 Quema de Grasa Activa";
-            else if (hours < 24) phase = "🧬 Autofagia Iniciada";
-            else phase = "🚀 Cetosis Profunda";
-            phaseText.innerText = phase;
-            document.getElementById('phase-container').classList.remove('hidden');
-        }
 
         function updateUI() {
             const savedStart = localStorage.getItem('fastingStartTime');
@@ -128,8 +101,6 @@
             const startTime = new Date(parseInt(savedStart));
             const now = new Date();
             const elapsedSeconds = Math.floor((now - startTime) / 1000);
-            
-            // Si la hora elegida es en el futuro, mostrar 0
             const displaySeconds = elapsedSeconds < 0 ? 0 : elapsedSeconds;
 
             const h = Math.floor(displaySeconds / 3600).toString().padStart(2, '0');
@@ -138,34 +109,28 @@
             timerEl.innerText = `${h}:${m}:${s}`;
 
             const targetHours = parseInt(document.getElementById('plan').value);
-            const targetSeconds = targetHours * 3600;
-            const progress = Math.min(displaySeconds / targetSeconds, 1);
+            const progress = Math.min(displaySeconds / (targetHours * 3600), 1);
             progressBar.style.strokeDashoffset = circumference - (progress * circumference);
-            
-            updateMetabolicPhase(displaySeconds / 3600);
 
-            const endDate = new Date(startTime.getTime() + targetSeconds * 1000);
-            document.getElementById('end-time').innerText = endDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-
-            if (displaySeconds >= targetSeconds) {
-                statusBadge.innerText = "Meta Lograda";
-                statusBadgeTop.innerText = "Completado";
-            } else {
-                statusBadge.innerText = "Ayunando";
-                statusBadgeTop.innerText = "En curso";
+            // Fases metabólicas
+            const hours = displaySeconds / 3600;
+            if (hours > 0) {
+                document.getElementById('phase-container').classList.remove('hidden');
+                const phaseText = document.getElementById('metabolic-phase');
+                if (hours < 4) phaseText.innerText = "🥑 Digestión Activa";
+                else if (hours < 12) phaseText.innerText = "📉 Bajando Insulina";
+                else if (hours < 16) phaseText.innerText = "🔥 Quema de Grasa";
+                else phaseText.innerText = "🧬 Autofagia Activa";
             }
         }
 
-        // Abrir Modal
         btnAction.addEventListener('click', () => {
             if (!isFasting) {
-                // Poner hora actual en el input
                 const now = new Date();
-                const currentTime = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
-                startTimeInput.value = currentTime;
-                timeModal.classList.remove('hidden');
+                startTimeInput.value = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
+                timeModal.classList.add('modal-active');
             } else {
-                if(confirm("¿Terminar ayuno?")) {
+                if(confirm("¿Terminar ayuno ahora?")) {
                     clearInterval(timerInterval);
                     localStorage.removeItem('fastingStartTime');
                     location.reload();
@@ -173,29 +138,18 @@
             }
         });
 
-        // Confirmar en el Modal
         document.getElementById('modal-confirm').addEventListener('click', () => {
-            const [hours, minutes] = startTimeInput.value.split(':');
+            const [h, m] = startTimeInput.value.split(':');
             const startDate = new Date();
-            startDate.setHours(parseInt(hours), parseInt(minutes), 0);
-            
-            // Si la hora elegida es "mayor" que ahora (ej: elegiste las 23:00 y son las 01:00), 
-            // asumimos que fue ayer
-            if (startDate > new Date()) {
-                startDate.setDate(startDate.getDate() - 1);
-            }
+            startDate.setHours(h, m, 0);
+            if (startDate > new Date()) startDate.setDate(startDate.getDate() - 1);
 
             localStorage.setItem('fastingStartTime', startDate.getTime());
-            isFasting = true;
-            timeModal.classList.add('hidden');
-            btnAction.innerText = "TERMINAR AYUNO";
-            btnAction.classList.replace('bg-emerald-600', 'bg-red-900/40');
-            timerInterval = setInterval(updateUI, 1000);
-            updateUI();
+            location.reload();
         });
 
         document.getElementById('modal-cancel').addEventListener('click', () => {
-            timeModal.classList.add('hidden');
+            timeModal.classList.remove('modal-active');
         });
 
         window.onload = () => {
