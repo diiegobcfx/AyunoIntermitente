@@ -3,123 +3,138 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FastQuest - Pet & Achievements</title>
+    <title>FastQuest - Animated Pet Edition</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#10b981">
-    
-    <!-- Soporte iOS Responsive -->
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="apple-touch-icon" href="app_logo.png">
-    
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap');
         body { font-family: 'Outfit', sans-serif; background: #080c14; color: white; -webkit-tap-highlight-color: transparent; }
         .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); }
-        .progress-ring { transition: stroke-dashoffset 0.5s ease-in-out; transform: rotate(-90deg); transform-origin: 50% 50%; }
-        .pet-bounce { animation: bounce 2s infinite ease-in-out; }
-        @keyframes bounce { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-15px) scale(1.1); } }
-        .calendar-day { aspect-ratio: 1; display: flex; items-center; justify-center; border-radius: 10px; font-size: 0.7rem; transition: all 0.3s; }
-        .day-active { background: linear-gradient(135deg, #10b981, #059669); color: #080c14; font-weight: bold; box-shadow: 0 0 10px rgba(16, 185, 129, 0.4); }
+        
+        /* Animación de Respiración de la Mascota */
+        .pet-container { cursor: pointer; transition: transform 0.2s; position: relative; }
+        .pet-container:active { transform: scale(0.9); }
+        .pet-anim { animation: breathe 3s infinite ease-in-out; display: inline-block; }
+        @keyframes breathe {
+            0%, 100% { transform: translateY(0) scale(1); filter: drop-shadow(0 0 5px rgba(16,185,129,0.2)); }
+            50% { transform: translateY(-10px) scale(1.05); filter: drop-shadow(0 10px 15px rgba(16,185,129,0.4)); }
+        }
+
+        /* Efecto de Corazón al tocar */
+        .heart-effect {
+            position: absolute; pointer-events: none; animation: floatUp 1s forwards;
+            font-size: 1.5rem; opacity: 0;
+        }
+        @keyframes floatUp {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-50px); opacity: 0; }
+        }
+
+        .progress-ring { transition: stroke-dashoffset 0.5s; transform: rotate(-90deg); transform-origin: 50% 50%; }
     </style>
 </head>
 <body class="flex flex-col items-center min-h-screen p-4 pb-10">
 
-    <!-- Header & XP -->
+    <!-- Header con Barra de XP -->
     <div class="w-full max-w-md flex justify-between items-center mb-6 mt-2">
         <div class="flex items-center gap-3">
             <div class="relative">
-                <img src="app_logo.png" class="w-12 h-12 rounded-2xl object-cover border border-emerald-500/30 shadow-lg">
+                <img src="app_logo.png" class="w-12 h-12 rounded-2xl object-cover shadow-lg border border-emerald-500/20">
                 <span id="level-badge" class="absolute -bottom-1 -right-1 bg-yellow-500 text-[9px] px-1.5 py-0.5 rounded-full text-black font-black">LVL 1</span>
             </div>
-            <div>
-                <h1 class="text-xl font-bold text-emerald-400 leading-none">FastQuest</h1>
-                <p class="text-[9px] text-slate-500 tracking-widest uppercase">Aventura Metabólica</p>
-            </div>
+            <h1 class="text-xl font-bold text-emerald-400">FastQuest</h1>
         </div>
-        <div class="text-right flex flex-col items-end">
-            <span class="text-[10px] text-slate-400 mb-1 tracking-tighter">PRÓXIMO NIVEL</span>
-            <div class="w-24 h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                <div id="xp-fill" class="bg-yellow-500 h-full transition-all duration-1000" style="width: 0%"></div>
-            </div>
+        <div class="w-24 h-2 bg-slate-800 rounded-full overflow-hidden">
+            <div id="xp-fill" class="bg-yellow-500 h-full transition-all duration-1000" style="width: 0%"></div>
         </div>
     </div>
 
-    <!-- Burbuja de la Mascota -->
-    <div class="glass w-full max-w-md p-5 rounded-[2rem] mb-6 flex items-center gap-5 border-t border-white/5 shadow-xl relative overflow-hidden">
-        <div class="absolute top-0 left-0 w-1 h-full bg-emerald-500"></div>
-        <div class="text-5xl pet-bounce" id="pet-avatar">🦊</div>
-        <div class="flex-1">
-            <p id="pet-bubble" class="text-sm text-slate-200 leading-tight">"¡Hola! Soy tu guía. Ajusta tu plan e iniciemos el viaje."</p>
+    <!-- Mascota Interactiva Animada -->
+    <div class="glass w-full max-w-md p-6 rounded-[2.5rem] mb-6 flex flex-col items-center gap-4 relative">
+        <div id="pet-area" class="pet-container" onclick="petMascot(event)">
+            <div id="pet-avatar" class="text-7xl pet-anim">🦊</div>
+            <div id="effects-container"></div>
+        </div>
+        <div class="bg-slate-900/80 p-4 rounded-2xl border-t border-white/5 w-full">
+            <p id="pet-bubble" class="text-center text-sm text-slate-200 italic">"¡Tócame para recibir un consejo!"</p>
         </div>
     </div>
 
-    <!-- Card de Control -->
-    <div class="glass p-6 rounded-[2.5rem] w-full max-w-md text-center shadow-2xl border border-white/5 mb-6">
-        <div class="flex justify-between items-center mb-6 px-2">
-            <select id="plan" class="bg-slate-900/80 text-white text-xs font-semibold p-2.5 rounded-xl border border-slate-700 outline-none">
-                <option value="16">Protocolo 16:8</option>
-                <option value="18">Protocolo 18:6</option>
-                <option value="20">Protocolo 20:4</option>
-            </select>
-            <div class="flex items-center gap-1.5 bg-orange-500/10 px-3 py-1.5 rounded-full border border-orange-500/20">
-                <span class="text-orange-500 text-xs font-bold">🔥 Racha: <span id="streak-val">0</span></span>
-            </div>
-        </div>
-
-        <div class="relative flex items-center justify-center mb-8">
-            <svg class="w-64 h-64">
-                <circle class="text-slate-800/50" stroke-width="12" stroke="currentColor" fill="transparent" r="115" cx="128" cy="128"/>
-                <circle id="progress-bar" class="text-emerald-500 progress-ring" stroke-width="12" stroke-dasharray="722.5" stroke-dashoffset="722.5" stroke-linecap="round" stroke="currentColor" fill="transparent" r="115" cx="128" cy="128"/>
+    <!-- Timer Card -->
+    <div class="glass p-6 rounded-[2.5rem] w-full max-w-md text-center mb-6">
+        <div class="relative flex items-center justify-center mb-6">
+            <svg class="w-56 h-56">
+                <circle class="text-slate-800" stroke-width="10" stroke="currentColor" fill="transparent" r="100" cx="112" cy="112"/>
+                <circle id="progress-bar" class="text-emerald-500 progress-ring" stroke-width="10" stroke-dasharray="628" stroke-dashoffset="628" stroke-linecap="round" stroke="currentColor" fill="transparent" r="100" cx="112" cy="112"/>
             </svg>
-            <div class="absolute flex flex-col items-center">
-                <span id="timer" class="text-5xl font-light tracking-tight">00:00:00</span>
-                <div id="phase-tag" class="mt-2 px-3 py-1 bg-emerald-500/10 text-emerald-400 text-[10px] rounded-full font-bold uppercase tracking-widest border border-emerald-500/20">Esperando</div>
+            <div class="absolute">
+                <span id="timer" class="text-4xl font-light">00:00:00</span>
+                <p id="phase-tag" class="text-[10px] text-emerald-400 font-bold uppercase mt-1">Inactivo</p>
             </div>
         </div>
-
-        <button id="btn-action" class="w-full bg-emerald-600 hover:bg-emerald-500 py-5 rounded-3xl font-black text-sm tracking-widest shadow-[0_10px_20px_rgba(16,185,129,0.3)] transition-all active:scale-95">
-            COMENZAR MISIÓN
+        <button id="btn-action" class="w-full bg-emerald-600 py-4 rounded-2xl font-black text-sm tracking-widest shadow-xl active:scale-95 transition-all">
+            INICIAR MISIÓN
         </button>
     </div>
 
-    <!-- Calendario de Logros -->
-    <div class="glass w-full max-w-md p-6 rounded-[2.5rem] border border-white/5">
-        <h3 class="text-xs font-bold mb-5 flex justify-between items-center text-slate-400 uppercase tracking-widest">
-            <span>Registro de Logros</span>
-            <span id="cal-month">MAYO 2026</span>
-        </h3>
-        <div class="grid grid-cols-7 gap-3" id="calendar-grid"></div>
-    </div>
-
-    <!-- Modal Ajuste de Tiempo -->
-    <div id="time-modal" class="fixed inset-0 bg-black/95 backdrop-blur-xl z-50 hidden items-center justify-center p-6">
-        <div class="glass w-full max-w-xs p-8 rounded-[3rem] text-center border border-emerald-500/30">
-            <div class="text-4xl mb-4">⏳</div>
-            <h3 class="text-xl font-bold mb-2">¿Cuándo iniciaste?</h3>
-            <p class="text-slate-400 text-xs mb-8 uppercase tracking-widest">Ajusta tu hora de salida</p>
-            
-            <input type="time" id="start-time-input" class="bg-slate-800 text-white text-4xl p-5 rounded-3xl w-full text-center border border-emerald-500/50 mb-10 outline-none">
-            
+    <!-- Modal Hora Inicio -->
+    <div id="time-modal" class="fixed inset-0 bg-black/95 backdrop-blur-xl z-50 hidden items-center justify-center p-6 text-center">
+        <div class="glass p-8 rounded-[3rem] w-full max-w-xs">
+            <h3 class="text-xl font-bold mb-6">¿A qué hora empezaste?</h3>
+            <input type="time" id="start-time-input" class="bg-slate-800 text-white text-4xl p-4 rounded-2xl w-full text-center mb-8 outline-none border border-emerald-500/50">
             <div class="flex gap-4">
-                <button onclick="closeModal()" class="flex-1 text-slate-400 font-bold py-2">CANCELAR</button>
-                <button id="modal-confirm" class="flex-1 bg-emerald-600 py-4 rounded-2xl font-black text-xs">CONFIRMAR</button>
+                <button onclick="closeModal()" class="flex-1 text-slate-400">Cerrar</button>
+                <button id="modal-confirm" class="flex-1 bg-emerald-600 py-4 rounded-xl font-bold">¡Vamos!</button>
             </div>
         </div>
     </div>
 
     <script>
-        const timerEl = document.getElementById('timer');
-        const petBubble = document.getElementById('pet-bubble');
         const petAvatar = document.getElementById('pet-avatar');
+        const petBubble = document.getElementById('pet-bubble');
+        const timerEl = document.getElementById('timer');
         const progressBar = document.getElementById('progress-bar');
-        const xpFill = document.getElementById('xp-fill');
-        const circumference = 115 * 2 * Math.PI;
+        const circumference = 100 * 2 * Math.PI;
         
+        let lastPhase = "";
         let isFasting = false;
 
-        function updateUI() {
+        // --- LÓGICA DE NOTIFICACIONES ---
+        function requestNotify() {
+            if ("Notification" in window) {
+                Notification.requestPermission();
+            }
+        }
+
+        function sendNotify(title, body) {
+            if (Notification.permission === "granted") {
+                new Notification(title, { body: body, icon: 'app_logo.png' });
+            }
+        }
+
+        // --- INTERACCIÓN MASCOTA ---
+        function petMascot(e) {
+            // Efecto visual
+            const heart = document.createElement('div');
+            heart.innerText = '❤️';
+            heart.className = 'heart-effect';
+            heart.style.left = `${e.offsetX}px`;
+            document.getElementById('effects-container').appendChild(heart);
+            setTimeout(() => heart.remove(), 1000);
+
+            // Consejos aleatorios
+            const tips = [
+                "¡Bebe un vaso de agua ahora mismo!",
+                "Si sientes hambre, prueba con té verde sin azúcar.",
+                "¡Casi subes de nivel! No te rindas.",
+                "¿Sabías que el hambre real solo dura 15 minutos?",
+                "¡Eres una máquina de quemar grasa hoy!"
+            ];
+            petBubble.innerText = `"${tips[Math.floor(Math.random() * tips.length)]}"`;
+        }
+
+        function updateLogic() {
             const savedStart = localStorage.getItem('fastingStartTime');
             if(!savedStart) return;
 
@@ -128,70 +143,48 @@
             const diff = Math.floor((now - startTime) / 1000);
             const hours = diff / 3600;
 
-            // Timer display
+            // Timer y Progreso
             const h = Math.floor(diff / 3600).toString().padStart(2, '0');
             const m = Math.floor((diff % 3600) / 60).toString().padStart(2, '0');
             const s = (diff % 60).toString().padStart(2, '0');
             timerEl.innerText = `${h}:${m}:${s}`;
-
-            // Progress & XP preview
-            const plan = parseInt(document.getElementById('plan').value);
+            
+            const plan = parseInt(localStorage.getItem('fastingPlan') || 16);
             const progress = Math.min(diff / (plan * 3600), 1);
             progressBar.style.strokeDashoffset = circumference - (progress * circumference);
-            xpFill.style.width = (progress * 100) + "%";
+            document.getElementById('xp-fill').style.width = (progress * 100) + "%";
 
-            // Pet Guidance Logic
-            if (hours < 1) {
+            // Fases Metabólicas y Notificaciones
+            let currentPhase = "";
+            if (hours < 12) {
+                currentPhase = "Digestión";
                 petAvatar.innerText = "🦊";
-                petBubble.innerText = "¡Misión iniciada! Bebe un vaso de agua ahora para activar tu metabolismo.";
-                document.getElementById('phase-tag').innerText = "Iniciando";
-            } else if (hours < 12) {
-                petAvatar.innerText = "🦁";
-                petBubble.innerText = "Tu cuerpo está quemando glucosa. Si sientes hambre, ¡es solo una señal, no una orden!";
-                document.getElementById('phase-tag').innerText = "Digestión";
             } else if (hours < 16) {
+                currentPhase = "Quema Grasa";
                 petAvatar.innerText = "🐯";
-                petBubble.innerText = "¡Nivel Intermedio! Tu grasa corporal está siendo utilizada como combustible. ¡Energía pura!";
-                document.getElementById('phase-tag').innerText = "Quema Grasa";
             } else {
+                currentPhase = "Autofagia";
                 petAvatar.innerText = "🐲";
-                petBubble.innerText = "¡ESTADO LEGENDARIO! Estás en autofagia. Tus células se están reparando. ¡Increíble!";
-                document.getElementById('phase-tag').innerText = "Autofagia";
-                document.getElementById('phase-tag').classList.replace('text-emerald-400', 'text-yellow-400');
             }
+
+            document.getElementById('phase-tag').innerText = currentPhase;
+
+            // Notificar cambio de fase
+            if (lastPhase !== currentPhase && lastPhase !== "") {
+                sendNotify("¡Fase Alcanzada!", `Has entrado en la etapa de ${currentPhase}. ¡Sigue así!`);
+            }
+            lastPhase = currentPhase;
         }
 
-        function renderCalendar() {
-            const grid = document.getElementById('calendar-grid');
-            grid.innerHTML = '';
-            const logs = JSON.parse(localStorage.getItem('fastingLogs') || '{}');
-            const today = new Date().getDate();
-            
-            for(let i = 1; i <= 31; i++) {
-                const day = document.createElement('div');
-                const hasLog = logs[i];
-                day.className = `calendar-day ${hasLog ? 'day-active' : 'bg-slate-900/50 text-slate-600 border border-white/5'}`;
-                day.innerText = i;
-                if(i === today && !hasLog) day.classList.add('border-emerald-500/50');
-                grid.appendChild(day);
-            }
-            
-            // Actualizar racha
-            const racha = Object.keys(logs).length;
-            document.getElementById('streak-val').innerText = racha;
-            document.getElementById('level-badge').innerText = `LVL ${Math.floor(racha/3) + 1}`;
-        }
-
+        // --- BOTONES ---
         document.getElementById('btn-action').addEventListener('click', () => {
             if(!isFasting) {
+                requestNotify();
                 document.getElementById('time-modal').style.display = 'flex';
                 const now = new Date();
                 document.getElementById('start-time-input').value = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
             } else {
-                if(confirm("¿Quieres terminar la misión y registrar tu logro?")) {
-                    const logs = JSON.parse(localStorage.getItem('fastingLogs') || '{}');
-                    logs[new Date().getDate()] = document.getElementById('plan').value;
-                    localStorage.setItem('fastingLogs', JSON.stringify(logs));
+                if(confirm("¿Finalizar misión?")) {
                     localStorage.removeItem('fastingStartTime');
                     location.reload();
                 }
@@ -204,6 +197,7 @@
             start.setHours(h, m, 0);
             if(start > new Date()) start.setDate(start.getDate() - 1);
             localStorage.setItem('fastingStartTime', start.getTime());
+            localStorage.setItem('fastingPlan', document.getElementById('plan')?.value || 16);
             location.reload();
         });
 
@@ -213,12 +207,9 @@
             if(localStorage.getItem('fastingStartTime')) {
                 isFasting = true;
                 document.getElementById('btn-action').innerText = "FINALIZAR MISIÓN";
-                document.getElementById('btn-action').classList.replace('bg-emerald-600', 'bg-orange-600');
-                setInterval(updateUI, 1000);
-                updateUI();
+                setInterval(updateLogic, 1000);
+                updateLogic();
             }
-            renderCalendar();
-            if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
         };
     </script>
 </body>
