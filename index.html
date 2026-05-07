@@ -3,225 +3,139 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FastQuest - Hero Edition</title>
+    <title>FastQuest - Ultra Notifications</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#10b981">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap');
-        body { font-family: 'Outfit', sans-serif; background: #05080f; color: white; -webkit-tap-highlight-color: transparent; overflow-x: hidden; }
+        body { font-family: 'Outfit', sans-serif; background: #05080f; color: white; -webkit-tap-highlight-color: transparent; }
         .glass { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.05); }
-        
-        /* Mascota Animada */
         .pet-anim { animation: breathe 3s infinite ease-in-out; display: inline-block; cursor: pointer; }
         @keyframes breathe {
             0%, 100% { transform: translateY(0) scale(1); filter: drop-shadow(0 0 10px rgba(16,185,129,0.3)); }
-            50% { transform: translateY(-15px) scale(1.08); filter: drop-shadow(0 20px 30px rgba(16,185,129,0.5)); }
+            50% { transform: translateY(-12px) scale(1.05); filter: drop-shadow(0 15px 25px rgba(16,185,129,0.4)); }
         }
-
-        .float-emoji { position: absolute; pointer-events: none; animation: floatUp 1s forwards; font-size: 1.5rem; }
-        @keyframes floatUp { 0% { transform: translateY(0) scale(1); opacity: 1; } 100% { transform: translateY(-100px) scale(1.5); opacity: 0; } }
-
-        .progress-ring { transition: stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1); transform: rotate(-90deg); transform-origin: 50% 50%; }
-        .calendar-day { aspect-ratio: 1; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; border: 1px solid rgba(255,255,255,0.03); }
-        .day-done { background: linear-gradient(135deg, #10b981, #059669); color: #05080f; font-weight: 900; box-shadow: 0 0 20px rgba(16,185,129,0.4); border: none; }
-        
-        /* Botón de Agua */
-        .water-btn { transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        .water-btn:active { transform: scale(1.2) rotate(15deg); }
+        .progress-ring { transition: stroke-dashoffset 0.8s ease-out; transform: rotate(-90deg); transform-origin: 50% 50%; }
+        .calendar-day { aspect-ratio: 1; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; transition: 0.3s; }
+        .day-done { background: #10b981; color: #05080f; font-weight: 900; box-shadow: 0 0 15px rgba(16,185,129,0.4); }
     </style>
 </head>
-<body class="flex flex-col items-center min-h-screen p-4 pb-12">
+<body class="flex flex-col items-center min-h-screen p-4 pb-10">
 
-    <!-- HUD Superior -->
-    <div class="w-full max-w-md flex justify-between items-end mb-8 mt-4 px-2">
-        <div class="flex items-center gap-4">
-            <div class="relative group">
-                <div class="absolute -inset-1 bg-emerald-500 rounded-2xl blur opacity-25 group-hover:opacity-50 transition"></div>
-                <img src="app_logo.png" class="relative w-14 h-14 rounded-2xl object-cover border border-white/10 shadow-2xl">
-                <span id="lvl-badge" class="absolute -bottom-2 -right-2 bg-yellow-400 text-black text-[10px] font-black px-2 py-0.5 rounded-full shadow-lg">LVL 1</span>
-            </div>
-            <div>
-                <h1 class="text-xl font-black text-white tracking-tight">FAST<span class="text-emerald-500">QUEST</span></h1>
-                <div class="flex gap-1 mt-1" id="xp-dots">
-                    <div class="w-2 h-2 bg-emerald-500 rounded-full"></div>
-                    <div class="w-2 h-2 bg-slate-700 rounded-full"></div>
-                    <div class="w-2 h-2 bg-slate-700 rounded-full"></div>
-                </div>
-            </div>
+    <!-- Header -->
+    <div class="w-full max-w-md flex justify-between items-center mb-6 mt-4">
+        <div class="flex items-center gap-3">
+            <img src="app_logo.png" class="w-12 h-12 rounded-2xl object-cover border border-emerald-500/20">
+            <h1 class="text-xl font-bold">FastQuest</h1>
         </div>
-        <div class="text-right">
-            <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-1">Racha Heroica</p>
-            <div class="bg-orange-500/10 text-orange-500 px-4 py-1.5 rounded-full border border-orange-500/20 font-black text-sm">
-                🔥 <span id="streak-val">0</span> DÍAS
-            </div>
+        <div class="bg-orange-500/10 px-3 py-1.5 rounded-full border border-orange-500/20">
+            <span class="text-orange-500 font-bold text-sm">🔥 <span id="streak-val">0</span></span>
         </div>
     </div>
 
-    <!-- Mascota & Diálogo -->
-    <div class="glass w-full max-w-md p-8 rounded-[3rem] mb-6 flex flex-col items-center relative overflow-hidden">
-        <div class="absolute top-0 right-0 p-4">
-            <button onclick="addWater()" class="water-btn flex flex-col items-center">
-                <span class="text-3xl">💧</span>
-                <span id="water-count" class="text-[10px] font-bold mt-1 bg-blue-500 px-2 rounded-full">0</span>
-            </button>
+    <!-- Mascota con Diálogo Dinámico -->
+    <div class="glass w-full max-w-md p-6 rounded-[2.5rem] mb-6 flex flex-col items-center text-center relative">
+        <div class="absolute top-4 right-4 bg-blue-500/20 px-2 py-1 rounded-lg border border-blue-500/30">
+            <span class="text-[10px] text-blue-400 font-bold">💧 Agua: <span id="water-count">0</span></span>
         </div>
-        
-        <div class="relative mb-6" onclick="petMascot(event)">
-            <div id="pet-avatar" class="text-8xl pet-anim">🦊</div>
-            <div id="particles"></div>
-        </div>
-        
-        <div class="bg-slate-950/50 p-5 rounded-3xl border border-white/5 w-full relative">
-            <div class="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-slate-900 rotate-45"></div>
-            <p id="pet-bubble" class="text-center text-sm font-medium leading-relaxed text-slate-200">
-                "¡Hola, héroe! Estoy listo para vigilar tu metabolismo hoy."
-            </p>
+        <div class="pet-anim text-7xl mb-4" onclick="petInteraction(event)">🦊</div>
+        <div class="bg-slate-900/60 p-4 rounded-2xl w-full">
+            <p id="pet-bubble" class="text-sm text-slate-200 italic">"¡Permíteme notificarte para guiarte en tu misión!"</p>
         </div>
     </div>
 
-    <!-- Panel de Control -->
-    <div class="glass p-8 rounded-[3.5rem] w-full max-w-md text-center mb-6 shadow-2xl">
-        <div class="flex items-center justify-center gap-4 mb-8">
-            <span class="text-xs font-bold text-slate-500">PLAN:</span>
-            <select id="plan" class="bg-slate-800 text-white text-xs font-black py-2 px-4 rounded-xl border-none outline-none">
-                <option value="16">16H - Guerrero</option>
-                <option value="18">18H - Élite</option>
-                <option value="20">20H - Maestro</option>
-            </select>
-        </div>
-
+    <!-- Timer Principal -->
+    <div class="glass p-8 rounded-[3rem] w-full max-w-md text-center mb-6">
         <div class="relative flex items-center justify-center mb-8">
-            <svg class="w-64 h-64">
-                <circle class="text-slate-900" stroke-width="12" stroke="currentColor" fill="transparent" r="110" cx="128" cy="128"/>
-                <circle id="progress-bar" class="text-emerald-500 progress-ring" stroke-width="12" stroke-dasharray="691" stroke-dashoffset="691" stroke-linecap="round" stroke="currentColor" fill="transparent" r="110" cx="128" cy="128"/>
+            <svg class="w-56 h-56">
+                <circle class="text-slate-800" stroke-width="10" stroke="currentColor" fill="transparent" r="100" cx="112" cy="112"/>
+                <circle id="progress-bar" class="text-emerald-500 progress-ring" stroke-width="10" stroke-dasharray="628" stroke-dashoffset="628" stroke-linecap="round" stroke="currentColor" fill="transparent" r="100" cx="112" cy="112"/>
             </svg>
-            <div class="absolute flex flex-col items-center">
-                <span id="timer" class="text-5xl font-light tracking-tighter">00:00:00</span>
-                <div id="phase-badge" class="mt-3 px-4 py-1 bg-emerald-500/10 text-emerald-400 text-[10px] font-black uppercase tracking-widest rounded-full border border-emerald-500/20">
-                    En Espera
-                </div>
+            <div class="absolute flex flex-col">
+                <span id="timer" class="text-4xl font-light">00:00:00</span>
+                <span id="phase-tag" class="text-[10px] font-bold text-emerald-500 uppercase mt-2">Listo</span>
             </div>
         </div>
-
-        <button id="btn-action" class="w-full bg-emerald-600 hover:bg-emerald-500 py-5 rounded-[2rem] font-black text-sm tracking-widest shadow-[0_10px_30px_rgba(16,185,129,0.3)] transition-all active:scale-95">
+        <button id="btn-action" class="w-full bg-emerald-600 py-4 rounded-2xl font-black text-sm tracking-widest active:scale-95 transition-all">
             INICIAR MISIÓN
         </button>
     </div>
 
-    <!-- Calendario -->
+    <!-- Historial -->
     <div class="glass w-full max-w-md p-6 rounded-[2.5rem]">
-        <div class="flex justify-between items-center mb-6 px-2">
-            <h3 class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Registro de Logros</h3>
-            <span class="text-[10px] text-emerald-500 font-bold">MAYO 2026</span>
-        </div>
-        <div id="calendar-grid" class="grid grid-cols-7 gap-3"></div>
+        <div id="calendar-grid" class="grid grid-cols-7 gap-2"></div>
     </div>
 
-    <!-- Modal Inicio -->
-    <div id="time-modal" class="fixed inset-0 bg-black/95 backdrop-blur-2xl z-50 hidden items-center justify-center p-6">
-        <div class="glass p-10 rounded-[3.5rem] w-full max-w-xs text-center">
-            <h3 class="text-2xl font-black mb-2">¿Hora de Inicio?</h3>
-            <p class="text-slate-500 text-xs mb-8 uppercase tracking-widest">Registra tu última comida</p>
-            <input type="time" id="start-time-input" class="bg-slate-800 text-white text-5xl p-6 rounded-[2rem] w-full text-center mb-10 border border-emerald-500/30 outline-none">
-            <div class="flex flex-col gap-4">
-                <button id="modal-confirm" class="w-full bg-emerald-600 py-5 rounded-2xl font-black text-sm shadow-xl">COMENZAR AHORA</button>
-                <button onclick="closeModal()" class="text-slate-500 font-bold text-xs tracking-widest">CANCELAR</button>
-            </div>
+    <!-- Modal Tiempo -->
+    <div id="time-modal" class="fixed inset-0 bg-black/95 backdrop-blur-xl z-50 hidden items-center justify-center p-6">
+        <div class="glass p-8 rounded-[3rem] w-full max-w-xs text-center border border-emerald-500/20">
+            <h3 class="text-xl font-bold mb-6">¿Cuándo empezaste?</h3>
+            <input type="time" id="start-time-input" class="bg-slate-800 text-white text-4xl p-4 rounded-2xl w-full text-center mb-8 border border-emerald-500/50 outline-none">
+            <button id="modal-confirm" class="w-full bg-emerald-600 py-4 rounded-xl font-bold">CONFIRMAR</button>
         </div>
     </div>
 
     <script>
-        const petWisdom = {
-            intro: ["Oye,", "Sabías que", "¡Atención!", "Dato pro:", "Mira,"],
-            body: ["tu cuerpo está", "tus células están", "tu energía se está", "tu estómago está", "tu mente se está"],
-            info: ["reparando tejidos viejos.", "limpiando toxinas.", "quemando grasa de sobra.", "rejuveneciendo por dentro.", "volviendo súper nítida."],
-            happy: ["¡Dale caña!", "¡Bebe agua!", "¡Vas genial!", "¡No pares!", "¡Héroe!"],
-            gen: function() {
-                const r = (a) => a[Math.floor(Math.random()*a.length)];
-                return `"${r(this.intro)} ${r(this.body)} ${r(this.info)} ${r(this.happy)}"`;
-            }
-        };
-
         let isFasting = false;
-        let water = 0;
-        const circum = 110 * 2 * Math.PI;
+        let notifiedWaterHours = 0;
+        let notifiedPhases = new Set();
+        const circum = 100 * 2 * Math.PI;
 
-        function addWater() {
-            water++;
-            document.getElementById('water-count').innerText = water;
-            createEmoji(event, '💧');
-            document.getElementById('pet-bubble').innerText = '"¡Glub, glub! Mantenerse hidratado es clave para la quema de grasa."';
-            localStorage.setItem('fastingWater', water);
+        // Gestión de Notificaciones
+        function sendPush(title, body) {
+            if ("Notification" in window && Notification.permission === "granted") {
+                new Notification(title, { body: body, icon: 'app_logo.png' });
+            }
         }
 
-        function petMascot(e) {
-            createEmoji(e, '✨');
-            document.getElementById('pet-bubble').innerText = petWisdom.gen();
-        }
-
-        function createEmoji(e, char) {
-            const el = document.createElement('div');
-            el.innerText = char;
-            el.className = 'float-emoji';
-            el.style.left = `${e.clientX - 20}px`;
-            el.style.top = `${e.clientY - 20}px`;
-            document.body.appendChild(el);
-            setTimeout(() => el.remove(), 1000);
-        }
-
-        function updateUI() {
+        function updateLogic() {
             const start = localStorage.getItem('fastingStartTime');
             if(!start) return;
 
             const diff = Math.floor((new Date() - new Date(parseInt(start))) / 1000);
             const hours = diff / 3600;
 
+            // Timer
             const h = Math.floor(diff/3600).toString().padStart(2, '0');
             const m = Math.floor((diff%3600)/60).toString().padStart(2, '0');
             const s = (diff%60).toString().padStart(2, '0');
             document.getElementById('timer').innerText = `${h}:${m}:${s}`;
 
-            const plan = parseInt(document.getElementById('plan').value);
-            const progress = Math.min(diff / (plan * 3600), 1);
-            document.getElementById('progress-bar').style.strokeDashoffset = circum - (progress * circum);
-
-            const pet = document.getElementById('pet-avatar');
-            const tag = document.getElementById('phase-badge');
-            if(hours < 12) { pet.innerText = "🦊"; tag.innerText = "Digestión"; }
-            else if(hours < 16) { pet.innerText = "🐯"; tag.innerText = "Quema Grasa"; }
-            else { pet.innerText = "🐲"; tag.innerText = "Autofagia"; tag.className = tag.className.replace('emerald', 'yellow'); }
-        }
-
-        function renderCalendar() {
-            const grid = document.getElementById('calendar-grid');
-            grid.innerHTML = '';
-            const logs = JSON.parse(localStorage.getItem('fastingLogs') || '{}');
-            const racha = Object.keys(logs).length;
-            document.getElementById('streak-val').innerText = racha;
-            document.getElementById('lvl-badge').innerText = `LVL ${Math.floor(racha/3)+1}`;
-
-            for(let i = 1; i <= 31; i++) {
-                const day = document.createElement('div');
-                day.className = `calendar-day ${logs[i] ? 'day-done' : 'bg-slate-900/50 text-slate-700'}`;
-                day.innerText = i;
-                grid.appendChild(day);
+            // Notificaciones de Agua (Cada 2 horas)
+            let waterCheck = Math.floor(hours / 2);
+            if (waterCheck > notifiedWaterHours) {
+                sendPush("💧 Hora de hidratarse", "Tu mascota te recuerda beber un vaso de agua para mantener el metabolismo activo.");
+                notifiedWaterHours = waterCheck;
             }
+
+            // Notificaciones de Fase
+            const tag = document.getElementById('phase-tag');
+            if (hours >= 12 && hours < 16 && !notifiedPhases.has('fat')) {
+                sendPush("🔥 Quema de Grasa", "¡Felicidades! Tu cuerpo ha entrado en la fase de cetosis.");
+                notifiedPhases.add('fat');
+                tag.innerText = "Quema Grasa";
+            } else if (hours >= 16 && !notifiedPhases.has('auto')) {
+                sendPush("🧬 Autofagia Activada", "Tus células han comenzado su proceso de reparación profunda.");
+                notifiedPhases.add('auto');
+                tag.innerText = "Autofagia";
+            }
+            
+            // UI Progress
+            const progress = Math.min(diff / (16 * 3600), 1);
+            document.getElementById('progress-bar').style.strokeDashoffset = circum - (progress * circum);
         }
 
         document.getElementById('btn-action').addEventListener('click', () => {
             if(!isFasting) {
+                Notification.requestPermission(); // Solicitar permiso al iniciar[span_1](start_span)[span_1](end_span)
                 document.getElementById('time-modal').style.display = 'flex';
-                const now = new Date();
-                document.getElementById('start-time-input').value = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
-                if("Notification" in window) Notification.requestPermission();
             } else {
-                if(confirm("¿Finalizar misión y recibir recompensa?")) {
+                if(confirm("¿Finalizar misión?")) {
                     const logs = JSON.parse(localStorage.getItem('fastingLogs') || '{}');
                     logs[new Date().getDate()] = true;
                     localStorage.setItem('fastingLogs', JSON.stringify(logs));
                     localStorage.removeItem('fastingStartTime');
-                    localStorage.removeItem('fastingWater');
                     location.reload();
                 }
             }
@@ -235,19 +149,22 @@
             location.reload();
         });
 
-        function closeModal() { document.getElementById('time-modal').style.display = 'none'; }
-
         window.onload = () => {
             if(localStorage.getItem('fastingStartTime')) {
                 isFasting = true;
-                document.getElementById('btn-action').innerText = "FINALIZAR MISIÓN";
-                document.getElementById('btn-action').classList.replace('bg-emerald-600', 'bg-orange-700');
-                water = parseInt(localStorage.getItem('fastingWater') || 0);
-                document.getElementById('water-count').innerText = water;
-                setInterval(updateUI, 1000);
-                updateUI();
+                document.getElementById('btn-action').innerText = "TERMINAR MISIÓN";
+                setInterval(updateLogic, 1000);
+                updateLogic();
             }
-            renderCalendar();
+            // Render calendario básico
+            const grid = document.getElementById('calendar-grid');
+            const logs = JSON.parse(localStorage.getItem('fastingLogs') || '{}');
+            for(let i=1; i<=31; i++) {
+                const day = document.createElement('div');
+                day.className = `calendar-day ${logs[i] ? 'day-done' : 'bg-slate-900 text-slate-700'}`;
+                day.innerText = i;
+                grid.appendChild(day);
+            }
         };
     </script>
 </body>
