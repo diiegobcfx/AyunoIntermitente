@@ -3,16 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FastQuest AI - Final Fix</title>
+    <title>FastQuest AI - Final Master Fix</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;900&display=swap');
         body { font-family: 'Outfit', sans-serif; background: #010409; color: white; -webkit-tap-highlight-color: transparent; }
         .glass { background: rgba(13, 17, 23, 0.9); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); }
         .ai-glow { border: 2px solid #10b981; box-shadow: 0 0 30px rgba(16, 185, 129, 0.2); }
-        .progress-ring { transition: stroke-dashoffset 0.5s ease; transform: rotate(-90deg); transform-origin: 50% 50%; }
+        .progress-ring { transition: stroke-dashoffset 0.8s ease-out; transform: rotate(-90deg); transform-origin: 50% 50%; }
         .pet { cursor: pointer; transition: transform 0.2s; }
         .pet:active { transform: scale(0.9); }
+        @keyframes pulse-ring { 0% { opacity: 0.4; } 50% { opacity: 1; } 100% { opacity: 0.4; } }
+        .loading-ring { animation: pulse-ring 1.5s infinite; }
     </style>
 </head>
 <body class="flex flex-col items-center min-h-screen p-4 pb-12">
@@ -38,20 +40,20 @@
             </div>
             <h1 class="text-2xl font-black italic tracking-tighter text-white">FASTQUEST <span class="text-emerald-500">PRO</span></h1>
         </div>
-        <button onclick="openModal()" class="p-2 bg-white/5 rounded-lg border border-white/10 hover:bg-white/10 transition-colors">⚙️</button>
+        <button onclick="openModal()" class="p-2 bg-white/5 rounded-lg border border-white/10 hover:bg-white/10">⚙️</button>
     </div>
 
-    <!-- Módulo IA Experta -->
+    <!-- Módulo IA -->
     <div id="ai-box" class="glass w-full max-w-md p-8 rounded-[3rem] mb-6 flex flex-col items-center text-center relative transition-all duration-500">
         <div id="pet-avatar" class="text-8xl pet mb-6" onclick="getAdvice()">🦊</div>
         <div class="bg-black/50 p-6 rounded-2xl w-full border border-white/5 min-h-[100px] flex items-center justify-center">
-            <p id="ai-bubble" class="text-sm font-medium leading-relaxed text-emerald-50 italic">
-                "Toca al zorro para recibir un consejo biohacker."
+            <p id="ai-bubble" class="text-sm font-medium leading-relaxed text-emerald-50 italic uppercase tracking-tight">
+                "Toca al zorro para recibir un análisis de la IA."
             </p>
         </div>
     </div>
 
-    <!-- Timer e Interfaz de Ayuno -->
+    <!-- Timer e Interfaz -->
     <div class="glass p-10 rounded-[4rem] w-full max-w-md text-center shadow-2xl">
         <div class="relative flex items-center justify-center mb-10">
             <svg class="w-64 h-64">
@@ -70,43 +72,40 @@
     </div>
 
     <script>
-        const API_URL = "https://api.groq.com/openai/v1/chat/completions";
-        let isRunning = false;
         const ringLength = 691;
+        let isRunning = false;
 
-        // --- GESTIÓN DE CLAVE ---
+        // Gestión de clave
         function openModal() { document.getElementById('api-modal').classList.remove('hidden'); }
         function closeModal() { document.getElementById('api-modal').classList.add('hidden'); }
-        
         function saveKey() {
             const val = document.getElementById('api-input').value.trim();
             if (val.startsWith('gsk_')) {
                 localStorage.setItem('fastquest_key', val);
                 location.reload();
-            } else {
-                alert("La clave debe empezar por gsk_");
-            }
+            } else { alert("Clave inválida"); }
         }
 
-        // --- MOTOR DE IA ---
+        // --- MOTOR IA CON PROXY ANTIBLOQUEO ---
         async function getAdvice() {
             const key = localStorage.getItem('fastquest_key');
             const bubble = document.getElementById('ai-bubble');
             const avatar = document.getElementById('pet-avatar');
 
-            if (!key) {
-                openModal();
-                return;
-            }
+            if (!key) { openModal(); return; }
 
-            bubble.innerText = "Sincronizando con Groq...";
+            bubble.innerText = "Sincronizando con puente seguro...";
             avatar.classList.add('animate-pulse');
 
             const start = localStorage.getItem('fast_start');
             const diff = start ? ((Date.now() - parseInt(start)) / 1000 / 3600).toFixed(1) : 0;
 
             try {
-                const response = await fetch(API_URL, {
+                // Proxy para evitar error de conexión (CORS)
+                const proxy = "https://corsproxy.io/?";
+                const target = "https://api.groq.com/openai/v1/chat/completions";
+
+                const response = await fetch(proxy + encodeURIComponent(target), {
                     method: "POST",
                     headers: {
                         "Authorization": `Bearer ${key}`,
@@ -115,24 +114,20 @@
                     body: JSON.stringify({
                         model: "llama3-8b-8192",
                         messages: [
-                            { role: "system", content: "Eres un experto en ayuno intermitente. Responde en 12 palabras máximo de forma motivadora y técnica." },
-                            { role: "user", content: `Llevo ${diff} horas de ayuno. ¿Qué pasa en mi cuerpo?` }
+                            { role: "system", content: "Eres un mentor biohacker. Responde en 12 palabras máximo sobre el estado metabólico." },
+                            { role: "user", content: `Llevo ${diff} horas de ayuno. Dime qué pasa en mi cuerpo.` }
                         ],
-                        temperature: 0.7
+                        temperature: 0.6
                     })
                 });
 
                 const data = await response.json();
-                if (data.choices && data.choices[0]) {
+                if (data.choices) {
                     bubble.innerText = `"${data.choices[0].message.content}"`;
-                } else {
-                    throw new Error();
-                }
+                } else { throw new Error(); }
             } catch (err) {
-                bubble.innerText = "Error: Verifica tu clave Groq o tu conexión a internet.";
-            } finally {
-                avatar.classList.remove('animate-pulse');
-            }
+                bubble.innerText = "Error de conexión. Verifica tu clave o tu saldo en Groq.";
+            } finally { avatar.classList.remove('animate-pulse'); }
         }
 
         // --- LÓGICA DE AYUNO ---
@@ -146,15 +141,12 @@
                     const [h, m] = userTime.split(':');
                     const startDate = new Date();
                     startDate.setHours(parseInt(h), parseInt(m), 0);
-                    
-                    // Si la hora es futura, asumimos que fue ayer
                     if (startDate > new Date()) startDate.setDate(startDate.getDate() - 1);
-                    
                     localStorage.setItem('fast_start', startDate.getTime());
                     location.reload();
                 }
             } else {
-                if (confirm("¿Finalizar el ayuno actual?")) {
+                if (confirm("¿Terminar misión?")) {
                     localStorage.removeItem('fast_start');
                     location.reload();
                 }
@@ -170,37 +162,30 @@
             document.getElementById('action-btn').classList.replace('bg-emerald-600', 'bg-orange-700');
             document.getElementById('ai-box').classList.add('ai-glow');
 
-            const tick = () => {
-                const now = Date.now();
-                const diffSec = Math.floor((now - parseInt(start)) / 1000);
+            setInterval(() => {
+                const diffSec = Math.floor((Date.now() - parseInt(start)) / 1000);
                 const hours = diffSec / 3600;
 
-                // Formatear Timer
                 const h = Math.floor(hours).toString().padStart(2, '0');
                 const m = Math.floor((diffSec % 3600) / 60).toString().padStart(2, '0');
                 const s = (diffSec % 60).toString().padStart(2, '0');
                 document.getElementById('timer-display').innerText = `${h}:${m}:${s}`;
 
-                // Barra de progreso (Meta 16h)
                 const progress = Math.min(hours / 16, 1);
                 document.getElementById('progress-bar').style.strokeDashoffset = ringLength - (progress * ringLength);
-
-                // Etiquetas de fase
+                
                 const label = document.getElementById('phase-label');
                 if (hours < 12) label.innerText = "Digestión";
-                else if (hours < 16) label.innerText = "Quema de Grasa";
+                else if (hours < 16) label.innerText = "Quema Grasa";
                 else label.innerText = "Autofagia";
-            };
-
-            tick();
-            setInterval(tick, 1000);
+            }, 1000);
         }
 
         window.onload = () => {
             const key = localStorage.getItem('fastquest_key');
             if (key) {
                 document.getElementById('status-dot').classList.replace('bg-red-500', 'bg-emerald-500');
-                document.getElementById('status-text').innerText = "IA Groq Activa";
+                document.getElementById('status-text').innerText = "IA Conectada";
                 document.getElementById('status-text').classList.replace('text-slate-500', 'text-emerald-500');
             }
             updateUI();
